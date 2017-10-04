@@ -47,7 +47,22 @@ def seasonScrape(season_url, wr):
 	
 	soup.decompose()
 
-def boxscore():
+def boxScore(full_link):
 
-	# test 	
-	# test No. 2
+	# test
+        page = urlopen(full_link)
+        subSoup = BeautifulSoup(page)
+        homeTeam = sub.Soup.find('th', {'data-stat':'home_team_score'})[0].string
+        howManyAtt = subSoup.find_all('td', {'data-stat':'rush_att'})[0].string
+        howManyYds = subSoup.find_all('td', {'data-stat':'rush_yds'})[0].string
+        ifTurf = subSoup.find('turf')
+        if not ifTurf==null:
+                fieldType = turf
+        else:
+                fieldType = grass
+        
+        
+        
+
+
+	
