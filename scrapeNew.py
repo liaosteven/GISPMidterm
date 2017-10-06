@@ -96,7 +96,7 @@ def seasonScrape(season_url, wr):
 		return_list = boxScore(full_link)
 
 		# write our finding to the CSV file
-		toReturn = [year, hometeam, awayteam, return_list]
+		toReturn = [year, hometeam, awayteam] + [return_list]
 		wr.writerow(toReturn)
 
 	# Always decompose the soup (if you make it, remember to decompose / discard it as a general rule)
