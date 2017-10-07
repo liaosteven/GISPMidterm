@@ -128,10 +128,20 @@ def boxScore(full_link, year, hometeam, awayteam):
 	output = output + [hometeam]
 	homeTeamList = soupcomment.find(string='Rush-Yds-TDs').parent.next_sibling.next_sibling.string.split('-')
 	output = output + homeTeamList
-	# find strings of grass
-	ifGrass = subSoup.find(string='grass')
+	soupcomment.decompose()
+	
+	# find if field type is grass
+
+	# Find the table with field type
+	allGameInfo = subSoup.find(id = 'all_game_info')
+
+	# The comment that is the actual code
+	gameInfoComment= allGameInfo.find(class_ = "placeholder").next_sibling.next_sibling
+	subSubSoup = BeautifulSoup(gameInfoComment)
+
+	ifGrass = subSubSoup.find(string='grass')
 	# if there are any strings, the fieldType is grass, otherwise, it's turf
-	if not ifGrass:
+	if ifGrass:
 		fieldType = 'grass'
 	else:
 		fieldType = 'turf'
@@ -142,4 +152,4 @@ def boxScore(full_link, year, hometeam, awayteam):
 
 	return output 
 
-allSeasonsScrape('run_stats.csv', 2007, 2007)
+allSeasonsScrape('run_stats.csv', 2007, 2016)
