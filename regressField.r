@@ -1,6 +1,6 @@
 #import data
 setwd("C:/Users/liaos/OneDrive/Documents/Brown/Senior Year/GISPMidterm")
-runStats <- read.csv("run_stats_data.csv")
+runStats <- read.csv("run_stats_fixed.csv")
 
 # Create YPC variables
 runStats$awayYPC <- runStats$away.yards / runStats$away.carries
@@ -58,3 +58,56 @@ teams$againstYards <- sapply(teams$team_id, teamYards, 0)
 
 teams$ownYPC <- teams$ownYards / teams$ownCarries
 teams$againstYPC <- teams$againstYards / teams$againstCarries
+
+# Merge with the RunStats Dataset
+teamsNonYPC <- teams[, c(1:5)]
+colnames(teamsNonYPC) <- c('homeId', 'homeOCarries', 'homeACarries', 'homeOYards', 'homeAYards') 
+runStats <- merge(runStats, teamsNonYPC, by= "homeId")
+
+colnames(teamsNonYPC) <- c('awayId', 'awayOCarries', 'awayACarries', 'awayOYards', 'awayAYards') 
+runStats <- merge(runStats, teamsNonYPC, by= "awayId")
+
+# Now adjust to remove current game:
+runStats$homeOCarriesAdj <- runStats$homeOCarries - runStats$home.carries
+runStats$awayACarriesAdj <- runStats$awayACarries - runStats$home.carries
+
+runStats$homeOYardsAdj <- runStats$homeOYards - runStats$home.yards
+runStats$awayAYardsAdj <- runStats$awayAYards - runStats$home.yards
+
+runStats$awayOCarriesAdj <- runStats$awayOCarries - runStats$away.carries
+runStats$homeACarriesAdj <- runStats$homeACarries - runStats$away.carries
+
+runStats$awayOYardsAdj <- runStats$awayOYards - runStats$away.yards
+runStats$homeAYardsAdj <- runStats$homeAYards - runStats$away.yards
+
+# Finally get Adjusted Offense and Defense
+runStats$homeOffenseYPC <- runStats$homeOYardsAdj / runStats$homeOCarriesAdj
+runStats$homeDefenseYPC <- runStats$homeAYardsAdj/ runStats$homeACarriesAdj
+runStats$awayOffenseYPC <- runStats$awayOYardsAdj / runStats$awayOCarriesAdj
+runStats$awayDefenseYPC <- runStats$awayAYardsAdj / runStats$awayACarriesAdj
+
+# Now filter for only the fields we need
+
+runStats_filter <- runStats[, c(3, 8, 4, 13, 15, 14, 33:36)]
+
+# We want a dataset with columns:
+# year, home or away, team, ypc, how good this team is at rushing, how good the defense is against rushing attacks
+
+# So we split up our current dataset to have the entries we want
+homeTeams <- runStats_filter[, c(1,2,4,5,7,10)]
+awayTeams <- runStats_filter[, c(1,3,4,6,8,9)]
+
+# Add homeOrAway column
+homeTeams$homeOrAway <- "Home"
+awayTeams$homeOrAway <- "Away"
+
+# Set it so all column names are the same 
+colnames(homeTeams)[c(2, 4:6)] <- c("team", "gameYPC", 'offenseYPC', 'defenseYPCAllowed')
+colnames(awayTeams)[c(2, 4:6)] <- c("team", "gameYPC", 'offenseYPC', 'defenseYPCAllowed')
+
+# Bind em together
+final_data_regression <- rbind(homeTeams, awayTeams)
+
+# Run regression
+
+mod <- lm(gameYPC ~ homeOrAway, data = final_data_regression)
