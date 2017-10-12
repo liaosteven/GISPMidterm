@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import csv
 import sys
 import time 
+import re
 
 def allSeasonsScrape(csv_file, startyr, endyr):
 	""" Does a seasonScrape for all years from startyr to endyr (inclusive).
@@ -13,9 +14,9 @@ def allSeasonsScrape(csv_file, startyr, endyr):
 	pre_url = "http://www.pro-football-reference.com/years/"
 	post_url = "/games.htm"
 
-	with open(csv_file, "w", newline="") as myfile:
+	with open(csv_file, "a", newline="") as myfile:
 		wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-		wr.writerow(['year', 'awayteam', 'away carries', 'away yards', 'away tds','hometeam', 'home carries', 'home yards', 'home tds', 'field'])
+		wr.writerow(['year', 'awayteam', 'away carries', 'away yards', 'away tds','hometeam', 'home carries', 'home yards', 'home tds', 'fieldSpecific', 'field'])
 		for i in range(startyr, endyr+1):
 			print(i)
 			sys.stdout.flush() # make sure number is printed out in real time
@@ -139,17 +140,18 @@ def boxScore(full_link, year, hometeam, awayteam):
 	gameInfoComment= allGameInfo.find(class_ = "placeholder").next_sibling.next_sibling
 	subSubSoup = BeautifulSoup(gameInfoComment)
 
-	ifGrass = subSubSoup.find(string='grass')
+	surface = subSubSoup.find(string = 'Surface').parent.next_sibling.text
+	ifGrass = subSubSoup.find(string= re.compile('^grass'))
 	# if there are any strings, the fieldType is grass, otherwise, it's turf
 	if ifGrass:
 		fieldType = 'grass'
 	else:
 		fieldType = 'turf'
 	# add field type to output list
-	output = output + [fieldType] 
-	
+	output = output + [surface, fieldType] 
+	subSubSoup.decompose()
 	subSoup.decompose()
 
 	return output 
 
-allSeasonsScrape('run_stats.csv', 2007, 2016)
+allSeasonsScrape('run_stats_fixed.csv', 2015, 2016)
